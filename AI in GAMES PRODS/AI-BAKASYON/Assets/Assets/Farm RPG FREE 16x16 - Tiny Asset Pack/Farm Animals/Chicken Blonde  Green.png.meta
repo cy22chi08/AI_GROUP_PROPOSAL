@@ -259,7 +259,13 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Chicken Blonde  Green_0: -2825447124637630265
+      Chicken Blonde  Green_1: 9191820586025897299
+      Chicken Blonde  Green_2: -5219821228504833141
+      Chicken Blonde  Green_3: 938706525745832542
+      Chicken Blonde  Green_4: -6065379224185416225
+      Chicken Blonde  Green_5: 8476789600722617127
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
