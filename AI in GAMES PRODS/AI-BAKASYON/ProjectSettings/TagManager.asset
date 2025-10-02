@@ -60,5 +60,8 @@ TagManager:
   - name: animals
     uniqueID: 2245770831
     locked: 0
+  - name: animation vid
+    uniqueID: 684902701
+    locked: 0
   m_RenderingLayers:
   - Default
