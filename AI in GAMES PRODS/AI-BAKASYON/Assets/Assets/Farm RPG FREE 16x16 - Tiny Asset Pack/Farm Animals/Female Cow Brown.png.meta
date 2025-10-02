@@ -409,7 +409,19 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Female Cow Brown_0: 5552232653154027118
+      Female Cow Brown_1: 5800295469788518432
+      Female Cow Brown_10: 6552863383666653065
+      Female Cow Brown_11: -5595454722353954054
+      Female Cow Brown_2: -6380609288461967311
+      Female Cow Brown_3: -6161296832414402164
+      Female Cow Brown_4: -181841106095109346
+      Female Cow Brown_5: -7686144640002690231
+      Female Cow Brown_6: 766162829150210828
+      Female Cow Brown_7: -2981452797289615579
+      Female Cow Brown_8: -8321422330933404023
+      Female Cow Brown_9: -4241355318793424453
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

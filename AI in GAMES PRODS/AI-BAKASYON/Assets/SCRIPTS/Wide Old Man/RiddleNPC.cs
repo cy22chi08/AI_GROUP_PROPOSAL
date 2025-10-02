@@ -21,6 +21,16 @@ public class RiddleNPC : MonoBehaviour
     private bool playerNear = false;
     private bool riddleActive = false;
 
+    // 🔹 ADDED: reference to player movement script
+    private PlayerMovement playerMovement; 
+
+    void Start()
+    {
+        // 🔹 ADDED: find the player’s movement script (change "Player" if your tag is different)
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null) playerMovement = player.GetComponent<PlayerMovement>();
+    }
+
     void Update()
     {
         if (playerNear && Input.GetKeyDown(KeyCode.E) && !riddleActive)
@@ -38,6 +48,9 @@ public class RiddleNPC : MonoBehaviour
             answerInput.gameObject.SetActive(true);
             answerInput.text = "";
             riddleActive = true;
+
+            // 🔹 ADDED: stop player movement while riddle is active
+            if (playerMovement != null) playerMovement.enabled = false;
 
             // Listen for enter/submit
             answerInput.onSubmit.AddListener(CheckAnswer);
@@ -62,6 +75,9 @@ public class RiddleNPC : MonoBehaviour
             dialogueText.text = "Correct!";
             currentRiddle++;
             riddleActive = false;
+
+            // 🔹 ADDED: re-enable player movement
+            if (playerMovement != null) playerMovement.enabled = true;
 
             if (currentRiddle < riddles.Length)
             {
@@ -96,11 +112,14 @@ public class RiddleNPC : MonoBehaviour
             dialogueUI.SetActive(false);
             answerInput.gameObject.SetActive(false);
             riddleActive = false;
+
+            // 🔹 ADDED: re-enable movement if player leaves
+            if (playerMovement != null) playerMovement.enabled = true;
         }
     }
-    public bool AllRiddlesSolved()
-{
-    return currentRiddle >= riddles.Length;
-}
 
+    public bool AllRiddlesSolved()
+    {
+        return currentRiddle >= riddles.Length;
+    }
 }
