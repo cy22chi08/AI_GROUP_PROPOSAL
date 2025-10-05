@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 3
   tags:
   - Animal
+  - Wall
   layers:
   - Default
   - TransparentFX
