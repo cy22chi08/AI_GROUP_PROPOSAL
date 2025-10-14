@@ -17,6 +17,8 @@ public class EnemyChaser2D : MonoBehaviour
     {
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
+
+        // 2D settings for NavMeshAgent
         agent.updateRotation = false;
         agent.updateUpAxis = false;
     }
@@ -25,6 +27,7 @@ public class EnemyChaser2D : MonoBehaviour
     {
         if (player == null) return;
 
+        // Recalculate path at intervals
         timer -= Time.deltaTime;
         if (timer <= 0f)
         {
@@ -32,41 +35,26 @@ public class EnemyChaser2D : MonoBehaviour
             timer = recalcInterval;
         }
 
+        // Movement detection
         Vector3 velocity = agent.velocity;
-        Vector2 moveDir = new Vector2(velocity.x, velocity.y);
+        float speed = velocity.magnitude;
 
-        // 🔸 Add a small threshold so tiny movements don't break idle
-        if (moveDir.magnitude > 0.05f)
+        // If moving, play the ghost animation. Otherwise, idle.
+        if (speed > 0.05f)
         {
-            float absX = Mathf.Abs(moveDir.x);
-            float absY = Mathf.Abs(moveDir.y);
-
-            if (absX > absY)
-            {
-                if (moveDir.x > 0)
-                    animator.Play("madghost_right");
-                else
-                    animator.Play("madghost_left");
-            }
-            else
-            {
-                if (moveDir.y > 0)
-                    animator.Play("madghost_up");
-                else
-                    animator.Play("madghost_down");
-            }
+            animator.Play("madghost2");
         }
         else
         {
-            animator.Play("madghost_down");
+            animator.Play("madghost2"); // same animation for idle
         }
 
-        // clamp z
+        // Clamp Z position to keep it 2D
         if (clampZToZero)
         {
-            Vector3 p = transform.position;
-            p.z = 0f;
-            transform.position = p;
+            Vector3 pos = transform.position;
+            pos.z = 0f;
+            transform.position = pos;
         }
     }
 }
