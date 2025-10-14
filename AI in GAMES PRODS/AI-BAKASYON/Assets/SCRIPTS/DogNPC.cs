@@ -12,6 +12,7 @@ public class DogNPC : MonoBehaviour
 
     [Header("Transition Settings")]
     public VideoPlayer videoPlayer;
+    public GameObject videoCanvas; // 👈 Add this
     public string nextSceneName;
 
     private bool isChasing = false;
@@ -56,31 +57,34 @@ public class DogNPC : MonoBehaviour
     }
 
     System.Collections.IEnumerator PlayTransition()
-{
-    isTransitioning = true;
-
-    // Disable player movement
-    if (player != null && player.GetComponent<PlayerMovement>() != null)
-        player.GetComponent<PlayerMovement>().enabled = false;
-
-    if (videoPlayer != null)
     {
-        // Prepare video first
-        videoPlayer.Prepare();
-        while (!videoPlayer.isPrepared)
-            yield return null;
+        isTransitioning = true;
 
-        // Play video
-        videoPlayer.Play();
+        // Disable player movement
+        if (player != null && player.GetComponent<PlayerMovement>() != null)
+            player.GetComponent<PlayerMovement>().enabled = false;
 
-        // Wait for it to finish
-        while (videoPlayer.isPlaying)
-            yield return null;
+        // ✅ Enable the video canvas before playing
+        if (videoCanvas != null)
+            videoCanvas.SetActive(true);
+
+        if (videoPlayer != null)
+        {
+            // Prepare video first
+            videoPlayer.Prepare();
+            while (!videoPlayer.isPrepared)
+                yield return null;
+
+            // Play video
+            videoPlayer.Play();
+
+            // Wait for it to finish
+            while (videoPlayer.isPlaying)
+                yield return null;
+        }
+
+        // Load next scene
+        if (!string.IsNullOrEmpty(nextSceneName))
+            SceneManager.LoadScene(nextSceneName);
     }
-
-    // Load next scene
-    if (!string.IsNullOrEmpty(nextSceneName))
-        SceneManager.LoadScene(nextSceneName);
-}
-
 }
