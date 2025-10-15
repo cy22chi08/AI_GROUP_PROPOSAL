@@ -1,10 +1,12 @@
 using UnityEngine;
 using TMPro;
+using UnityEngine.Tilemaps;
 
 public class IrrigationQuestManager : MonoBehaviour
 {
     public NPCDialogue_Irrigation npc;
     public Collider2D blockedPath;
+    public Tilemap irrigationOn; // ✅ Changed from Collider2D to Tilemap
     public GameObject dialogueUI;
     public TMP_Text dialogueText;
 
@@ -16,6 +18,7 @@ public class IrrigationQuestManager : MonoBehaviour
     void Start()
     {
         switches = FindObjectsOfType<IrrigationSwitch>();
+        irrigationOn.GetComponent<TilemapRenderer>().enabled = false; // Start hidden
     }
 
     public void TryActivateSwitch(int index, IrrigationSwitch sw)
@@ -27,7 +30,7 @@ public class IrrigationQuestManager : MonoBehaviour
             return;
         }
 
-        if (index == currentStep) // ✅ correct switch
+        if (index == currentStep)
         {
             sw.Activate();
             currentStep++;
@@ -38,11 +41,12 @@ public class IrrigationQuestManager : MonoBehaviour
             if (currentStep >= totalSwitches)
             {
                 blockedPath.gameObject.SetActive(false);
+                irrigationOn.GetComponent<TilemapRenderer>().enabled = true; // ✅ Show tilemap
                 dialogueText.text = "All switches activated! The water flows to the crops.";
                 Debug.Log("Irrigation quest completed.");
             }
         }
-        else // ❌ wrong switch → reset all
+        else
         {
             currentStep = 0;
             dialogueUI.SetActive(true);
