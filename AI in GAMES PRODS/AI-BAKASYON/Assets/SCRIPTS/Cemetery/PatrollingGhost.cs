@@ -2,27 +2,42 @@ using UnityEngine;
 using UnityEngine.AI;
 
 [RequireComponent(typeof(NavMeshAgent))]
+[RequireComponent(typeof(Animator))]
 public class PatrolChaseAI : MonoBehaviour
 {
+    [Header("References")]
     public Transform player;
     public Transform[] patrolPoints;
-    public float detectionRange = 6f;    // when to start chasing
-    public float chaseStopRange = 9f;    // when to stop chasing (a bit larger to avoid jitter)
-    public float recalcInterval = 0.2f;  // how often to update path
-    public float patrolWaitTime = 2f;    // wait before moving to next point
-
     private NavMeshAgent agent;
+    private Animator animator;
+    private SpriteRenderer spriteRenderer;
+
+    [Header("Behavior Settings")]
+    public float detectionRange = 6f;    // start chasing
+    public float chaseStopRange = 9f;    // stop chasing
+    public float recalcInterval = 0.2f;  // path update rate
+    public float patrolWaitTime = 2f;    // wait before next patrol
+
     private int currentPointIndex = 0;
     private float waitTimer = 0f;
     private float recalcTimer = 0f;
     private bool isChasing = false;
 
+    private Vector3 lastPosition;
+
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
+        animator = GetComponent<Animator>();
+        spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+
         agent.updateRotation = false;
         agent.updateUpAxis = false;
-        GoToNextPatrolPoint();
+
+        lastPosition = transform.position;
+
+        if (patrolPoints.Length > 0)
+            GoToNextPatrolPoint();
     }
 
     void Update()
@@ -35,10 +50,14 @@ public class PatrolChaseAI : MonoBehaviour
         if (!isChasing && distance <= detectionRange)
         {
             isChasing = true;
+            animator.SetBool("IsChasing", true);
+            Debug.Log("→ Switching to Chase");
         }
         else if (isChasing && distance >= chaseStopRange)
         {
             isChasing = false;
+            animator.SetBool("IsChasing", false);
+            Debug.Log("→ Switching back to Patrol");
             GoToNextPatrolPoint();
         }
 
@@ -48,7 +67,16 @@ public class PatrolChaseAI : MonoBehaviour
         else
             Patrol();
 
-        // Clamp Z so it stays 2D
+        // --- FLIP SPRITE BASED ON DIRECTION ---
+        Vector3 movement = transform.position - lastPosition;
+        if (movement.x > 0.01f)
+            spriteRenderer.flipX = false; // facing right
+        else if (movement.x < -0.01f)
+            spriteRenderer.flipX = true; // facing left
+
+        lastPosition = transform.position;
+
+        // Clamp Z axis for 2D
         Vector3 pos = transform.position;
         pos.z = 0;
         transform.position = pos;
@@ -58,7 +86,7 @@ public class PatrolChaseAI : MonoBehaviour
     {
         if (patrolPoints.Length == 0) return;
 
-        // Move to current patrol point
+        // Check if reached patrol point
         if (!agent.pathPending && agent.remainingDistance < 0.2f)
         {
             waitTimer += Time.deltaTime;
