@@ -1,47 +1,82 @@
 using UnityEngine;
+using System.Collections;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class AnimalPush : MonoBehaviour
 {
     public float moveSpeed = 5f;
     private Rigidbody2D rb;
-    private bool isMoving;
+    private bool isMoving = false;
+    private bool canBePushed = true;
+    private bool isTouchingPlayer = false;
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         rb.gravityScale = 0;
-        rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+        rb.constraints = RigidbodyConstraints2D.FreezeAll; // Freeze by default
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (!isMoving && collision.gameObject.CompareTag("Player"))
+        if (collision.gameObject.CompareTag("Player"))
         {
-            Vector2 direction = (transform.position - collision.transform.position).normalized;
+            isTouchingPlayer = true;
 
-            // Snap to 4 directions
-            Vector2 moveDir = Vector2.zero;
-            if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y))
-                moveDir = new Vector2(Mathf.Sign(direction.x), 0);
-            else
-                moveDir = new Vector2(0, Mathf.Sign(direction.y));
+            // Temporarily unfreeze X and Y so it can move
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
 
-            Vector2 targetPos = rb.position + moveDir;
+            if (canBePushed && !isMoving)
+            {
+                Vector2 direction = (transform.position - collision.transform.position).normalized;
 
-            StartCoroutine(MoveToPosition(targetPos));
+                // Snap to 4 directions
+                Vector2 moveDir = Vector2.zero;
+                if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y))
+                    moveDir = new Vector2(Mathf.Sign(direction.x), 0);
+                else
+                    moveDir = new Vector2(0, Mathf.Sign(direction.y));
+
+                StartCoroutine(MoveAnimal(moveDir));
+                StartCoroutine(PushCooldown());
+            }
         }
     }
 
-    System.Collections.IEnumerator MoveToPosition(Vector2 target)
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            isTouchingPlayer = false;
+
+            // Freeze position again when not touching player
+            if (!isMoving)
+                rb.constraints = RigidbodyConstraints2D.FreezeAll;
+        }
+    }
+
+    IEnumerator MoveAnimal(Vector2 moveDir)
     {
         isMoving = true;
-        while ((target - rb.position).sqrMagnitude > 0.01f)
+
+        float elapsed = 0f;
+        while (elapsed < 2f)
         {
-            rb.MovePosition(Vector2.MoveTowards(rb.position, target, moveSpeed * Time.deltaTime));
+            rb.MovePosition(rb.position + moveDir * moveSpeed * Time.deltaTime);
+            elapsed += Time.deltaTime;
             yield return null;
         }
-        rb.MovePosition(target);
+
+        // Stop movement and freeze again
+        rb.linearVelocity = Vector2.zero;
+        rb.constraints = RigidbodyConstraints2D.FreezeAll;
         isMoving = false;
+    }
+
+    IEnumerator PushCooldown()
+    {
+        canBePushed = false;
+        yield return new WaitForSeconds(1f);
+        canBePushed = true;
     }
 }

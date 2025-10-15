@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 13312, guid: 0000000000000000e000000000000000, type: 0}
-  m_Name: pixil-frame-0 (1)_1
+  m_Name: irrigation vertical 1_10
   m_EditorClassIdentifier: 
-  m_Sprite: {fileID: -1897378804, guid: 57bde3bf2debe1343a1acfc12945252f, type: 3}
+  m_Sprite: {fileID: 1042171586, guid: e360fbd89a242f44584f6ed1098219ef, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Transform:
     e00: 1
