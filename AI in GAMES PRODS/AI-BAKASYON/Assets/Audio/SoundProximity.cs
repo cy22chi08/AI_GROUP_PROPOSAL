@@ -1,53 +1,53 @@
 using UnityEngine;
 
 [RequireComponent(typeof(AudioSource))]
-public class NPCProximitySound : MonoBehaviour
+public class ProximityAudio : MonoBehaviour
 {
-    [Header("References")]
-    public Transform player;          // Assign your player object here
-
-    [Header("Sound Settings")]
-    public float maxDistance = 6f;    // Max distance where the sound is audible
-    public float minDistance = 1.5f;  // Distance for full volume
-    public float fadeSpeed = 2f;      // How fast the sound fades in/out
+    public Transform player;
+    public float audibleRange = 6f;
+    public float fullVolumeDistance = 1.5f;
+    public float fadeSpeed = 2f;
 
     private AudioSource audioSource;
+    private bool isPlaying = false;
 
     void Start()
     {
         audioSource = GetComponent<AudioSource>();
         audioSource.playOnAwake = false;
-        audioSource.loop = true; // Loop sound continuously
-        audioSource.volume = AudioManager.Instance.sfxVolume;
+        audioSource.loop = true;
+        audioSource.volume = 0f; // start silent
     }
 
     void Update()
     {
-        if (player == null) return;
+        if (player == null)
+        {
+            GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+            if (playerObj != null) player = playerObj.transform;
+            else return;
+        }
 
         float distance = Vector2.Distance(transform.position, player.position);
 
-        if (distance <= maxDistance)
+        if (distance <= audibleRange)
         {
-            // Start sound if not playing
-            if (!audioSource.isPlaying)
+            if (!isPlaying)
+            {
                 audioSource.Play();
+                isPlaying = true;
+            }
 
-            // Calculate volume based on proximity (closer = louder)
-            float t = Mathf.InverseLerp(maxDistance, minDistance, distance);
-            float targetVolume = Mathf.Lerp(0f, 1f, 1 - t);
-
-            // Smoothly adjust volume over time
+            float t = Mathf.InverseLerp(audibleRange, fullVolumeDistance, distance);
+            float targetVolume = Mathf.Lerp(0f, AudioManager.Instance.sfxVolume, 1 - t);
             audioSource.volume = Mathf.MoveTowards(audioSource.volume, targetVolume, Time.deltaTime * fadeSpeed);
         }
         else
         {
-            // Fade out and stop when player leaves range
-            if (audioSource.isPlaying)
+            if (isPlaying)
             {
-                audioSource.volume = Mathf.MoveTowards(audioSource.volume, 0f, Time.deltaTime * fadeSpeed);
-                if (audioSource.volume <= 0.01f)
-                    audioSource.Stop();
+                audioSource.Stop();
+                isPlaying = false;
             }
         }
     }

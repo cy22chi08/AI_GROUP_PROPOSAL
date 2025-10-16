@@ -16,23 +16,27 @@ public class ProjectileGhost_WithProximitySound : MonoBehaviour
     [Header("Attack Settings")]
     public GameObject projectilePrefab;
     public Transform firePoint;
-    public float fireRate = 1f;       // shots per second
-    public float fireDelay = 0.35f;   // delay to match 4th–5th frame timing
-    public float firePointYOffset = 0.5f; // height offset for bullet spawn
+    public float fireRate = 1f;        // shots per second
+    public float fireDelay = 0.35f;    // delay for shoot animation sync
+    public float firePointYOffset = 0.5f; // bullet spawn height offset
 
     [Header("Audio Settings")]
-    public AudioClip ghostSound;       // assign looping ghost sound
-    public float audibleRange = 8f;    // how far player can hear
-    public float minDistance = 2f;     // distance for full volume
+    public AudioClip ghostSound;
+    public float audibleRange = 8f;     // max distance to hear
+    public float fullVolumeDistance = 2f; // distance for full volume
     public float fadeSpeed = 2f;
-    public float baseVolume = 0.8f;
+
+    private float baseVolume = 0.8f;
 
     private NavMeshAgent agent;
     private Animator animator;
     private AudioSource audioSource;
+
     private float fireCooldown = 0f;
     private bool isChargingShot = false;
     private bool inAudibleRange = false;
+    private bool hasStartedAudio = false;
+    private float recalcTimer = 0f;
 
     void Start()
     {
@@ -49,57 +53,84 @@ public class ProjectileGhost_WithProximitySound : MonoBehaviour
         audioSource.clip = ghostSound;
         audioSource.playOnAwake = false;
         audioSource.loop = true;
-        audioSource.volume = AudioManager.Instance.sfxVolume;
-
-        if (ghostSound != null)
-            audioSource.Play();
+        audioSource.volume = 0f; // start silent
     }
 
     void Update()
     {
-        if (player == null) return;
+        if (player == null)
+        {
+            GameObject p = GameObject.FindGameObjectWithTag("Player");
+            if (p != null) player = p.transform;
+            else return;
+        }
 
-        HandleProximitySound(); // 🔊 manage audio fading
-        HandleBehavior();       // 🤖 handle chase + attack
+        if (AudioManager.Instance != null)
+            baseVolume = AudioManager.Instance.sfxVolume;
+
+        HandleBehavior();
+        HandleProximitySound();
     }
 
+    // -------------------------------
+    // AI BEHAVIOR
+    // -------------------------------
     void HandleBehavior()
     {
         float distance = Vector2.Distance(transform.position, player.position);
 
-        if (distance > stopDistance)
+        recalcTimer -= Time.deltaTime;
+        if (recalcTimer <= 0f)
         {
-            // Chase player
-            if (animator != null)
-                animator.Play("projectileghostidle");
+            recalcTimer = recalcInterval;
 
-            isChargingShot = false;
-            agent.isStopped = false;
-            agent.SetDestination(player.position);
-        }
-        else
-        {
-            // Stop and shoot
-            agent.isStopped = true;
-            TryShoot();
-        }
+            if (distance > stopDistance)
+            {
+                // Move toward player
+                if (animator != null)
+                    animator.Play("projectileghostidle");
 
-        // Clamp Z axis
-        Vector3 pos = transform.position;
-        pos.z = 0;
-        transform.position = pos;
+                isChargingShot = false;
+                agent.isStopped = false;
+                agent.SetDestination(player.position);
+            }
+            else
+            {
+                // Stop and shoot
+                agent.isStopped = true;
+                TryShoot();
+            }
+
+            // Keep Z locked
+            Vector3 pos = transform.position;
+            pos.z = 0;
+            transform.position = pos;
+        }
     }
 
+    // -------------------------------
+    // SOUND HANDLING
+    // -------------------------------
     void HandleProximitySound()
     {
+        if (ghostSound == null) return;
+
         float distance = Vector2.Distance(transform.position, player.position);
 
+        // Inside audible range
         if (distance <= audibleRange)
         {
-            // Inside range
-            if (!inAudibleRange) inAudibleRange = true;
+            inAudibleRange = true;
 
-            float t = Mathf.InverseLerp(audibleRange, minDistance, distance);
+            if (!hasStartedAudio)
+            {
+                if (!audioSource.isPlaying)
+                    audioSource.Play();
+
+                hasStartedAudio = true;
+            }
+
+            float t = Mathf.InverseLerp(audibleRange, fullVolumeDistance, distance);
             float targetVolume = Mathf.Lerp(0f, baseVolume, 1 - t);
             audioSource.volume = Mathf.MoveTowards(audioSource.volume, targetVolume, Time.deltaTime * fadeSpeed);
         }
@@ -109,6 +140,7 @@ public class ProjectileGhost_WithProximitySound : MonoBehaviour
             if (inAudibleRange)
             {
                 inAudibleRange = false;
+                hasStartedAudio = false;
                 StartCoroutine(FadeOutAndStop());
             }
         }
@@ -121,10 +153,14 @@ public class ProjectileGhost_WithProximitySound : MonoBehaviour
             audioSource.volume -= Time.deltaTime * fadeSpeed;
             yield return null;
         }
+
         audioSource.volume = 0f;
         audioSource.Stop();
     }
 
+    // -------------------------------
+    // SHOOTING
+    // -------------------------------
     void TryShoot()
     {
         fireCooldown -= Time.deltaTime;
@@ -134,14 +170,14 @@ public class ProjectileGhost_WithProximitySound : MonoBehaviour
             isChargingShot = true;
             fireCooldown = 1f / fireRate;
 
-            // play animation
+            // Play animation
             if (animator != null)
             {
                 animator.Play("projectileghostshoot");
                 animator.speed = fireRate;
             }
 
-            // delay for animation sync
+            // Delay for animation sync
             Invoke(nameof(ShootAtPlayer), fireDelay);
         }
     }
@@ -149,6 +185,7 @@ public class ProjectileGhost_WithProximitySound : MonoBehaviour
     void ShootAtPlayer()
     {
         if (player == null) return;
+        if (projectilePrefab == null || firePoint == null) return;
 
         Vector3 spawnPos = firePoint.position + new Vector3(0f, firePointYOffset, 0f);
         GameObject bullet = Instantiate(projectilePrefab, spawnPos, Quaternion.identity);

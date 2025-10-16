@@ -17,10 +17,10 @@ public class PatrolChaseAI_WithProximitySound : MonoBehaviour
     private AudioSource audioSource;
 
     [Header("Behavior Settings")]
-    public float detectionRange = 6f;    // Start chasing
-    public float chaseStopRange = 9f;    // Stop chasing
-    public float recalcInterval = 0.2f;  // Path update rate
-    public float patrolWaitTime = 2f;    // Wait before next patrol
+    public float detectionRange = 6f;
+    public float chaseStopRange = 9f;
+    public float recalcInterval = 0.2f;
+    public float patrolWaitTime = 2f;
 
     [Header("Audio Settings")]
     public AudioClip patrolClip;
@@ -29,13 +29,15 @@ public class PatrolChaseAI_WithProximitySound : MonoBehaviour
     public float baseVolume = 0.8f;
 
     [Header("Proximity Settings")]
-    public float audibleRange = 8f;      // Max range where sound can be heard
-    public float fullVolumeDistance = 2f; // Distance for full volume
+    public float audibleRange = 8f;
+    public float fullVolumeDistance = 2f;
 
     private int currentPointIndex = 0;
     private float waitTimer = 0f;
     private float recalcTimer = 0f;
     private bool isChasing = false;
+    private bool isInAudibleRange = false;
+    private bool hasStartedAudio = false;
     private Vector3 lastPosition;
 
     void Start()
@@ -48,21 +50,25 @@ public class PatrolChaseAI_WithProximitySound : MonoBehaviour
         agent.updateRotation = false;
         agent.updateUpAxis = false;
 
+        // Audio setup
         audioSource.playOnAwake = false;
         audioSource.loop = true;
-        audioSource.volume = AudioManager.Instance.sfxVolume;
+        audioSource.volume = 0f; // start silent
 
         lastPosition = transform.position;
 
         if (patrolPoints.Length > 0)
             GoToNextPatrolPoint();
-
-        PlayClip(patrolClip);
     }
 
     void Update()
     {
-        if (player == null) return;
+        if (player == null)
+        {
+            GameObject p = GameObject.FindGameObjectWithTag("Player");
+            if (p != null) player = p.transform;
+            else return;
+        }
 
         float distance = Vector2.Distance(transform.position, player.position);
 
@@ -87,8 +93,8 @@ public class PatrolChaseAI_WithProximitySound : MonoBehaviour
         else
             Patrol();
 
-        // --- PROXIMITY SOUND VOLUME ---
-        UpdateProximityVolume(distance);
+        // --- SOUND RANGE LOGIC ---
+        HandleProximityAudio(distance);
 
         // --- SPRITE FLIP ---
         Vector3 movement = transform.position - lastPosition;
@@ -105,6 +111,7 @@ public class PatrolChaseAI_WithProximitySound : MonoBehaviour
         transform.position = pos;
     }
 
+    // --- PATROL & CHASE LOGIC ---
     void Patrol()
     {
         if (patrolPoints.Length == 0) return;
@@ -138,14 +145,7 @@ public class PatrolChaseAI_WithProximitySound : MonoBehaviour
         currentPointIndex = (currentPointIndex + 1) % patrolPoints.Length;
     }
 
-    // --- SOUND FUNCTIONS ---
-    void PlayClip(AudioClip clip)
-    {
-        if (clip == null) return;
-        audioSource.clip = clip;
-        audioSource.Play();
-    }
-
+    // --- AUDIO FUNCTIONS ---
     void CrossfadeTo(AudioClip newClip)
     {
         if (newClip == null || audioSource.clip == newClip)
@@ -157,16 +157,20 @@ public class PatrolChaseAI_WithProximitySound : MonoBehaviour
 
     IEnumerator FadeSound(AudioClip newClip)
     {
-        // Fade out current
+        // Fade out
         while (audioSource.volume > 0.01f)
         {
             audioSource.volume -= Time.deltaTime * fadeSpeed;
             yield return null;
         }
 
-        // Switch to new clip
+        // Switch
         audioSource.clip = newClip;
-        audioSource.Play();
+        if (isInAudibleRange)
+        {
+            audioSource.Play();
+            hasStartedAudio = true;
+        }
 
         // Fade in
         while (audioSource.volume < baseVolume)
@@ -179,19 +183,51 @@ public class PatrolChaseAI_WithProximitySound : MonoBehaviour
     }
 
     // --- PROXIMITY SYSTEM ---
-    void UpdateProximityVolume(float distance)
+    void HandleProximityAudio(float distance)
     {
-        if (!audioSource.isPlaying) return;
+        if (AudioManager.Instance != null)
+            baseVolume = AudioManager.Instance.sfxVolume;
 
+        // Within audible range
         if (distance <= audibleRange)
         {
+            isInAudibleRange = true;
+
+            if (!hasStartedAudio)
+            {
+                // Play if not already playing
+                if (audioSource.clip != null && !audioSource.isPlaying)
+                {
+                    audioSource.Play();
+                }
+                hasStartedAudio = true;
+            }
+
             float t = Mathf.InverseLerp(audibleRange, fullVolumeDistance, distance);
             float targetVolume = Mathf.Lerp(0f, baseVolume, 1 - t);
             audioSource.volume = Mathf.MoveTowards(audioSource.volume, targetVolume, Time.deltaTime * fadeSpeed);
         }
         else
         {
-            audioSource.volume = Mathf.MoveTowards(audioSource.volume, 0f, Time.deltaTime * fadeSpeed);
+            // Out of range → stop sound
+            if (isInAudibleRange)
+            {
+                StartCoroutine(FadeOutAndStop());
+                isInAudibleRange = false;
+                hasStartedAudio = false;
+            }
         }
+    }
+
+    IEnumerator FadeOutAndStop()
+    {
+        while (audioSource.volume > 0.01f)
+        {
+            audioSource.volume -= Time.deltaTime * fadeSpeed;
+            yield return null;
+        }
+
+        audioSource.Stop();
+        audioSource.volume = 0f;
     }
 }

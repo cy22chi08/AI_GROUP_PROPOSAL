@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class AudioManager : MonoBehaviour
 {
@@ -19,9 +20,10 @@ public class AudioManager : MonoBehaviour
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
-            // Load saved volumes
             musicVolume = PlayerPrefs.GetFloat("MusicVolume", 1f);
             sfxVolume = PlayerPrefs.GetFloat("SFXVolume", 1f);
+
+            SceneManager.sceneLoaded += OnSceneLoaded;
         }
         else
         {
@@ -33,6 +35,35 @@ public class AudioManager : MonoBehaviour
     private void Start()
     {
         ApplyVolumes();
+        FindAndPlaySceneMusic();
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        // Stop any old music and play the new scene’s music
+        FindAndPlaySceneMusic();
+    }
+
+    private void FindAndPlaySceneMusic()
+    {
+        // Stop old music first
+        if (backgroundMusic != null)
+            backgroundMusic.Stop();
+
+        // Find the new music in the loaded scene
+        AudioSource newMusicSource = GameObject.FindWithTag("Music")?.GetComponent<AudioSource>();
+
+        if (newMusicSource != null)
+        {
+            backgroundMusic = newMusicSource;
+            backgroundMusic.volume = musicVolume;
+            backgroundMusic.loop = true;
+            backgroundMusic.Play();
+        }
+        else
+        {
+            backgroundMusic = null; // No music in this scene
+        }
     }
 
     public void SetMusicVolume(float value)
@@ -70,7 +101,6 @@ public class AudioManager : MonoBehaviour
             sfxSource.volume = sfxVolume;
     }
 
-    // 🔸 Helper for any other script to play one-shot sounds (like NPCs or projectiles)
     public void PlaySFXAtPoint(AudioClip clip, Vector3 position)
     {
         if (clip == null) return;
