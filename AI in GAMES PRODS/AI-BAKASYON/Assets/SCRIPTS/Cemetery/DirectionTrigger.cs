@@ -35,7 +35,7 @@ public class DirectionTrigger : MonoBehaviour
                     audioSource = gameObject.AddComponent<AudioSource>();
                     audioSource.clip = appearSound;
                     audioSource.loop = true;
-                    audioSource.volume = soundVolume;
+                    audioSource.volume = AudioManager.Instance.sfxVolume;
                     audioSource.spatialBlend = 1f; // 3D sound effect
                     audioSource.minDistance = 2f;  // Start to fade after this distance
                     audioSource.maxDistance = 10f; // Fully fade out after this

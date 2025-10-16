@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 8477558359364796504}
   - component: {fileID: 642116992481770749}
   - component: {fileID: 1329333322272182455}
+  - component: {fileID: 1714266513466626299}
   m_Layer: 8
   m_Name: projectiles 1
   m_TagString: Wall
@@ -209,7 +210,7 @@ AudioSource:
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
-  m_PlayOnAwake: 1
+  m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
   Loop: 0
@@ -294,6 +295,18 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &1714266513466626299
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2753633253472921801}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f57559dc4ba82d42810b85c042ac2ed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &7947765552353601784
 GameObject:
   m_ObjectHideFlags: 0

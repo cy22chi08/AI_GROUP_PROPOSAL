@@ -31,7 +31,7 @@ public class ProjectileDamage_WithProximitySound : MonoBehaviour
         audioSource.clip = projectileSound;
         audioSource.playOnAwake = false;
         audioSource.loop = true;
-        audioSource.volume = 0f;
+        audioSource.volume = AudioManager.Instance.sfxVolume;
 
         // Start lifetime timer
         Destroy(gameObject, lifetime);

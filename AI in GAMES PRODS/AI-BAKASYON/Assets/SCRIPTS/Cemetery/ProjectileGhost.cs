@@ -49,7 +49,7 @@ public class ProjectileGhost_WithProximitySound : MonoBehaviour
         audioSource.clip = ghostSound;
         audioSource.playOnAwake = false;
         audioSource.loop = true;
-        audioSource.volume = 0f;
+        audioSource.volume = AudioManager.Instance.sfxVolume;
 
         if (ghostSound != null)
             audioSource.Play();

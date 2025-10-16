@@ -50,7 +50,7 @@ public class PatrolChaseAI_WithProximitySound : MonoBehaviour
 
         audioSource.playOnAwake = false;
         audioSource.loop = true;
-        audioSource.volume = 0f;
+        audioSource.volume = AudioManager.Instance.sfxVolume;
 
         lastPosition = transform.position;
 

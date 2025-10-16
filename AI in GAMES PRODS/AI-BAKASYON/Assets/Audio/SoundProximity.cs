@@ -18,7 +18,7 @@ public class NPCProximitySound : MonoBehaviour
         audioSource = GetComponent<AudioSource>();
         audioSource.playOnAwake = false;
         audioSource.loop = true; // Loop sound continuously
-        audioSource.volume = 0f; // Start silent
+        audioSource.volume = AudioManager.Instance.sfxVolume;
     }
 
     void Update()

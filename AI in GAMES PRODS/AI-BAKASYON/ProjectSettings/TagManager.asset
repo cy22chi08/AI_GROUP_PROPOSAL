@@ -6,6 +6,8 @@ TagManager:
   tags:
   - Animal
   - Wall
+  - OptionsPanel
+  - Music
   layers:
   - Default
   - TransparentFX
