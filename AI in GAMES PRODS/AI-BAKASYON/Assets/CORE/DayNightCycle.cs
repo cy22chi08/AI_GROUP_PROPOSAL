@@ -35,7 +35,7 @@ public class DayNightCycle : MonoBehaviour
 
         // --- Color transition ---
         Color dayColor = new Color(1f, 0.95f, 0.8f);
-        Color nightColor = new Color(0.3f, 0.3f, 0.6f);
+        Color nightColor = new Color(0.25f, 0.35f, 0.65f);
         globalLight.color = Color.Lerp(nightColor, dayColor, Mathf.InverseLerp(0.25f, 1f, globalLight.intensity));
     }
 }
