@@ -9,7 +9,7 @@ public class SimpleNPCDialogue : MonoBehaviour
 
     [Header("Dialogue Settings")]
     [TextArea]
-    public string dialogueLine = "Hello there, Poy! Never give up!";
+    public string dialogueLine = "oy Poy!!, PADAYON!!";
 
     private bool playerNear = false;
 

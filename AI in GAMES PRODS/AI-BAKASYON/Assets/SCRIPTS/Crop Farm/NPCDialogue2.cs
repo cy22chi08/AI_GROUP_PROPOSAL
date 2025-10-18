@@ -17,8 +17,9 @@ public class NPCDialogue_Irrigation : MonoBehaviour
             {
                 dialogueUI.SetActive(true);
                 dialogueText.text = 
-                    "Hello there Toy! I need help with my water irrigation.\n" +
-                    "Can you help me with that? My knees are killing me.";
+                    " Poy Iho!! Salamat naman at napadaan ka.\n" +
+                    " Paki - bukas mo nga mga irrigasyon natin at ang tuhod ko'y masakit na.\n" +
+                    " Salamat Iho!!";
                 questAccepted = true;
                 Debug.Log("Irrigation Quest accepted.");
             }

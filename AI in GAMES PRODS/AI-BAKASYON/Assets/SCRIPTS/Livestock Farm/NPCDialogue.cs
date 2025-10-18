@@ -17,7 +17,7 @@ public class NPCDialogue : MonoBehaviour
             if (!questAccepted)
             {
                 dialogueUI.SetActive(true);
-                dialogueText.text = "Hey Totoy, Help me push the animals into the coop.";
+                dialogueText.text = "Poy Anak , Hulihin mo nga ang mga manok at nakalabas nanaman sila.";
                 questAccepted = true;
             }
         }
