@@ -72,7 +72,7 @@ public class RiddleNPC : MonoBehaviour
 
         if (playerAnswer == riddles[currentRiddle].answer.ToLower())
         {
-            dialogueText.text = "Correct!";
+            dialogueText.text = "Eto";
             currentRiddle++;
             riddleActive = false;
 
