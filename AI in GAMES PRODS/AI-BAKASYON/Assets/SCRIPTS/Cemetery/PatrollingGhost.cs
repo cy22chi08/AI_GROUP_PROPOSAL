@@ -5,7 +5,7 @@ using System.Collections;
 [RequireComponent(typeof(NavMeshAgent))]
 [RequireComponent(typeof(Animator))]
 [RequireComponent(typeof(AudioSource))]
-public class PatrolChaseAI_WithProximitySound : MonoBehaviour
+public class PatrollingGhost : MonoBehaviour
 {
     [Header("References")]
     public Transform player;
@@ -32,6 +32,11 @@ public class PatrolChaseAI_WithProximitySound : MonoBehaviour
     public float audibleRange = 8f;
     public float fullVolumeDistance = 2f;
 
+    [Header("Freeze On Hit Settings")]
+    public bool isFrozen = false;           // True when hit by throwable
+    public float frozenDuration = 3f;       // How long it stays frozen
+    private Color originalColor;
+
     private int currentPointIndex = 0;
     private float waitTimer = 0f;
     private float recalcTimer = 0f;
@@ -50,7 +55,8 @@ public class PatrolChaseAI_WithProximitySound : MonoBehaviour
         agent.updateRotation = false;
         agent.updateUpAxis = false;
 
-        // Audio setup
+        originalColor = spriteRenderer.color; // store color for reset later
+
         audioSource.playOnAwake = false;
         audioSource.loop = true;
         audioSource.volume = 0f; // start silent
@@ -68,6 +74,14 @@ public class PatrolChaseAI_WithProximitySound : MonoBehaviour
             GameObject p = GameObject.FindGameObjectWithTag("Player");
             if (p != null) player = p.transform;
             else return;
+        }
+
+        // 🔒 Stop all behavior if frozen
+        if (isFrozen)
+        {
+            agent.ResetPath();
+            animator.SetBool("IsChasing", false);
+            return;
         }
 
         float distance = Vector2.Distance(transform.position, player.position);
@@ -195,11 +209,9 @@ public class PatrolChaseAI_WithProximitySound : MonoBehaviour
 
             if (!hasStartedAudio)
             {
-                // Play if not already playing
                 if (audioSource.clip != null && !audioSource.isPlaying)
-                {
                     audioSource.Play();
-                }
+
                 hasStartedAudio = true;
             }
 
@@ -209,7 +221,6 @@ public class PatrolChaseAI_WithProximitySound : MonoBehaviour
         }
         else
         {
-            // Out of range → stop sound
             if (isInAudibleRange)
             {
                 StartCoroutine(FadeOutAndStop());
@@ -230,4 +241,51 @@ public class PatrolChaseAI_WithProximitySound : MonoBehaviour
         audioSource.Stop();
         audioSource.volume = 0f;
     }
+
+    // --- 🧊 FREEZE EFFECT (triggered by throwable) ---
+    public void FreezeEnemy()
+{
+    if (!isFrozen)
+        StartCoroutine(FreezeEffect());
+}
+
+private IEnumerator FreezeEffect()
+    {
+        isFrozen = true;
+
+        // Change color to blue to indicate frozen
+        if (spriteRenderer != null)
+            spriteRenderer.color = new Color(0.5f, 0.5f, 1f, 1f);
+
+        // Stop movement and audio
+        agent.ResetPath();
+        audioSource.Stop();
+        animator.SetBool("IsChasing", false);
+
+        // --- Disable all EnemyDamage components ---
+        EnemyDamage[] damages = GetComponentsInChildren<EnemyDamage>();
+        foreach (var dmg in damages)
+            dmg.enabled = false;
+
+        // --- Optionally disable collider for safety ---
+        Collider2D col = GetComponent<Collider2D>();
+        if (col != null)
+            col.enabled = false;
+
+        // --- Stay frozen for a duration ---
+        yield return new WaitForSeconds(frozenDuration);
+
+        // --- Restore everything ---
+        isFrozen = false;
+
+        if (spriteRenderer != null)
+            spriteRenderer.color = originalColor;
+
+        foreach (var dmg in damages)
+            dmg.enabled = true;
+
+        if (col != null)
+            col.enabled = true;
+    }
+
 }

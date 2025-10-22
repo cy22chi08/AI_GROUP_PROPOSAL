@@ -3,30 +3,35 @@ using UnityEngine;
 public class TriggerPanelWithAudio : MonoBehaviour
 {
     [Header("UI Settings")]
-    public GameObject panel; // The UI panel to show
+    public GameObject Congratspanel;  // The UI panel to show
+    public GameObject ItemUIpanel;    // The item UI panel to hide
 
     [Header("Audio Settings")]
-    public AudioSource audioSource; // AudioSource component
-    public AudioClip openSound;     // Sound when panel opens
-    public AudioClip closeSound;    // Sound when panel closes
+    public AudioSource audioSource;   // AudioSource component
+    public AudioClip openSound;       // Sound when panel opens
+    public AudioClip closeSound;      // Sound when panel closes
 
     [Header("Player Settings")]
-    public string playerTag = "Player"; // Make sure player is tagged as "Player"
+    public string playerTag = "Player"; // Make sure player is tagged "Player"
 
     private bool isPaused = false;
 
     private void Start()
     {
-        if (panel != null)
-            panel.SetActive(false);
+        if (Congratspanel != null)
+            Congratspanel.SetActive(false);
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag(playerTag) && !isPaused)
         {
-            if (panel != null)
-                panel.SetActive(true);
+            if (Congratspanel != null)
+                Congratspanel.SetActive(true);
+
+            // ✅ Hide the item UI when game completes
+            if (ItemUIpanel != null)
+                ItemUIpanel.SetActive(false);
 
             if (audioSource != null && openSound != null)
                 audioSource.PlayOneShot(openSound);
@@ -44,16 +49,20 @@ public class TriggerPanelWithAudio : MonoBehaviour
         }
     }
 
-    // Called from button or automatically on exit
+    // ✅ Called from button or automatically on exit
     public void ResumeGame()
     {
-        if (panel != null)
-            panel.SetActive(false);
+        if (Congratspanel != null)
+            Congratspanel.SetActive(false);
+
+        // Re-enable Item UI when game resumes
+        if (ItemUIpanel != null)
+            ItemUIpanel.SetActive(true);
 
         if (audioSource != null && closeSound != null)
             audioSource.PlayOneShot(closeSound);
 
-        Time.timeScale = 1f; // Resume game
+        Time.timeScale = 1f; // Resume the game
         isPaused = false;
     }
 }

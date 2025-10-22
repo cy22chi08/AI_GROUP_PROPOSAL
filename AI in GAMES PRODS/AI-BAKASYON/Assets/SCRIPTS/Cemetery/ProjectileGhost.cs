@@ -5,32 +5,45 @@ using System.Collections;
 [RequireComponent(typeof(NavMeshAgent))]
 [RequireComponent(typeof(Animator))]
 [RequireComponent(typeof(AudioSource))]
-public class ProjectileGhost_WithProximitySound : MonoBehaviour
+public class ProjectileGhost : MonoBehaviour
 {
     [Header("AI Settings")]
     public Transform player;
     public float recalcInterval = 0.2f;
-    public float stopDistance = 4f; // distance to start shooting
+    public float stopDistance = 4f;
     public float moveSpeedMultiplier = 0.8f;
 
     [Header("Attack Settings")]
     public GameObject projectilePrefab;
     public Transform firePoint;
-    public float fireRate = 1f;        // shots per second
-    public float fireDelay = 0.35f;    // delay for shoot animation sync
-    public float firePointYOffset = 0.5f; // bullet spawn height offset
+    public float fireRate = 1f;
+    public float fireDelay = 0.35f;
+    public float firePointYOffset = 0.5f;
 
     [Header("Audio Settings")]
     public AudioClip ghostSound;
-    public float audibleRange = 8f;     // max distance to hear
-    public float fullVolumeDistance = 2f; // distance for full volume
+    public float audibleRange = 8f;
+    public float fullVolumeDistance = 2f;
     public float fadeSpeed = 2f;
 
     private float baseVolume = 0.8f;
 
+    // --- Added slow/freeze vars ---
+    [Header("Hit Reaction Settings")]
+    public float slowMultiplier = 0.4f;       // how much slower it moves
+    public float slowDuration = 3f;           // how long it stays slowed
+    public Color slowColor = new Color(0.5f, 0.5f, 1f, 1f);
+
+    private bool isSlowed = false;
+    private float originalSpeed;
+    private Color originalColor;
+    private bool canShoot = true;
+
+    // Components
     private NavMeshAgent agent;
     private Animator animator;
     private AudioSource audioSource;
+    private SpriteRenderer spriteRenderer;
 
     private float fireCooldown = 0f;
     private bool isChargingShot = false;
@@ -43,17 +56,23 @@ public class ProjectileGhost_WithProximitySound : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
         audioSource = GetComponent<AudioSource>();
+        spriteRenderer = GetComponentInChildren<SpriteRenderer>();
 
         // NavMesh setup
         agent.updateRotation = false;
         agent.updateUpAxis = false;
         agent.speed *= moveSpeedMultiplier;
 
+        // Save defaults
+        originalSpeed = agent.speed;
+        if (spriteRenderer != null)
+            originalColor = spriteRenderer.color;
+
         // Audio setup
         audioSource.clip = ghostSound;
         audioSource.playOnAwake = false;
         audioSource.loop = true;
-        audioSource.volume = 0f; // start silent
+        audioSource.volume = 0f;
     }
 
     void Update()
@@ -77,6 +96,8 @@ public class ProjectileGhost_WithProximitySound : MonoBehaviour
     // -------------------------------
     void HandleBehavior()
     {
+        if (isSlowed) return; // ✅ stop updating if stunned/slowed heavily
+
         float distance = Vector2.Distance(transform.position, player.position);
 
         recalcTimer -= Time.deltaTime;
@@ -86,7 +107,6 @@ public class ProjectileGhost_WithProximitySound : MonoBehaviour
 
             if (distance > stopDistance)
             {
-                // Move toward player
                 if (animator != null)
                     animator.Play("projectileghostidle");
 
@@ -96,12 +116,11 @@ public class ProjectileGhost_WithProximitySound : MonoBehaviour
             }
             else
             {
-                // Stop and shoot
                 agent.isStopped = true;
-                TryShoot();
+                if (canShoot)
+                    TryShoot();
             }
 
-            // Keep Z locked
             Vector3 pos = transform.position;
             pos.z = 0;
             transform.position = pos;
@@ -117,7 +136,6 @@ public class ProjectileGhost_WithProximitySound : MonoBehaviour
 
         float distance = Vector2.Distance(transform.position, player.position);
 
-        // Inside audible range
         if (distance <= audibleRange)
         {
             inAudibleRange = true;
@@ -136,7 +154,6 @@ public class ProjectileGhost_WithProximitySound : MonoBehaviour
         }
         else
         {
-            // Outside range
             if (inAudibleRange)
             {
                 inAudibleRange = false;
@@ -163,6 +180,7 @@ public class ProjectileGhost_WithProximitySound : MonoBehaviour
     // -------------------------------
     void TryShoot()
     {
+        if (!canShoot) return; // ✅ skip when slowed/hit
         fireCooldown -= Time.deltaTime;
 
         if (fireCooldown <= 0f && !isChargingShot)
@@ -170,20 +188,20 @@ public class ProjectileGhost_WithProximitySound : MonoBehaviour
             isChargingShot = true;
             fireCooldown = 1f / fireRate;
 
-            // Play animation
             if (animator != null)
             {
                 animator.Play("projectileghostshoot");
                 animator.speed = fireRate;
             }
 
-            // Delay for animation sync
             Invoke(nameof(ShootAtPlayer), fireDelay);
         }
     }
 
     void ShootAtPlayer()
     {
+        if (!canShoot) return; // ✅ safety check
+
         if (player == null) return;
         if (projectilePrefab == null || firePoint == null) return;
 
@@ -196,5 +214,35 @@ public class ProjectileGhost_WithProximitySound : MonoBehaviour
             rb.linearVelocity = dir * 6f;
 
         isChargingShot = false;
+    }
+
+    // -------------------------------
+    // SLOW / HIT REACTION
+    // -------------------------------
+    public void ApplySlowEffect()
+    {
+        if (!isSlowed)
+            StartCoroutine(SlowEffectRoutine());
+    }
+
+    private IEnumerator SlowEffectRoutine()
+    {
+        isSlowed = true;
+        canShoot = false;
+
+        // Slow and recolor
+        agent.speed *= slowMultiplier;
+        if (spriteRenderer != null)
+            spriteRenderer.color = slowColor;
+
+        yield return new WaitForSeconds(slowDuration);
+
+        // Restore
+        agent.speed = originalSpeed;
+        if (spriteRenderer != null)
+            spriteRenderer.color = originalColor;
+
+        canShoot = true;
+        isSlowed = false;
     }
 }

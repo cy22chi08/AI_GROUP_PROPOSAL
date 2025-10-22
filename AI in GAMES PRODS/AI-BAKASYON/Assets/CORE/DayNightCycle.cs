@@ -23,7 +23,7 @@ public class DayNightCycle : MonoBehaviour
         float targetIntensity;
 
         if (timeOfDay < 6f || timeOfDay > 18f)
-            targetIntensity = 0.25f; // night
+            targetIntensity = 0.01f; // night
         else if (timeOfDay < 8f)
             targetIntensity = Mathf.Lerp(0.25f, 1f, (timeOfDay - 6f) / 2f); // sunrise
         else if (timeOfDay > 16f)

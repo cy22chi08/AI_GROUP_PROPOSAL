@@ -8,6 +8,8 @@ TagManager:
   - Wall
   - OptionsPanel
   - Music
+  - ThrowableItem
+  - Enemy
   layers:
   - Default
   - TransparentFX
@@ -19,7 +21,7 @@ TagManager:
   - Player
   - Enemies
   - video
-  - 
+  - items
   - 
   - 
   - 
@@ -74,6 +76,9 @@ TagManager:
     locked: 0
   - name: Hearts
     uniqueID: 409689151
+    locked: 0
+  - name: items
+    uniqueID: 3269093135
     locked: 0
   m_RenderingLayers:
   - Default
