@@ -6,14 +6,13 @@ using System.Collections;
 public class DogNPC : MonoBehaviour
 {
     [Header("Dog Settings")]
-    public Animation dogAnimation;       // ✅ Legacy Animation component
-    public AnimationClip sleepClip;      // Sleeping idle loop
-    public AnimationClip wakeClip;       // Wake-up once
-    public AnimationClip chaseClip;      // Chase loop
+    public Animation dogAnimation;
+    public AnimationClip sleepClip;
+    public AnimationClip wakeClip;
+    public AnimationClip chaseClip;
 
     public Transform player;
     public float chaseSpeed = 3f;
-    public bool chaseEnabled = true;
 
     [Header("Transition Settings")]
     public VideoPlayer videoPlayer;
@@ -25,53 +24,45 @@ public class DogNPC : MonoBehaviour
 
     void Start()
     {
-        // 💤 Start sleeping animation
         if (dogAnimation != null)
         {
-            if (sleepClip != null) dogAnimation.AddClip(sleepClip, "Sleep");
-            if (wakeClip != null)  dogAnimation.AddClip(wakeClip, "Wake");
-            if (chaseClip != null) dogAnimation.AddClip(chaseClip, "Chase");
+            if (sleepClip) dogAnimation.AddClip(sleepClip, "Sleep");
+            if (wakeClip)  dogAnimation.AddClip(wakeClip, "Wake");
+            if (chaseClip) dogAnimation.AddClip(chaseClip, "Chase");
 
-            if (sleepClip != null)
-                dogAnimation.Play("Sleep");
+            dogAnimation.Play("Sleep");
         }
     }
 
     public void TriggerOuter(Collider2D other)
     {
-        if (!other.CompareTag("Player") || isChasing) return;
-        StartCoroutine(WakeUpDog());
+        if (other.CompareTag("Player") && !isChasing)
+            StartCoroutine(WakeUpDog());
     }
 
     public void TriggerInner(Collider2D other)
     {
-        if (!other.CompareTag("Player") || isTransitioning) return;
-        StartCoroutine(PlayTransition());
+        if (other.CompareTag("Player") && !isTransitioning)
+            StartCoroutine(PlayTransition());
     }
 
     IEnumerator WakeUpDog()
     {
         isChasing = true;
 
-        // 🐶 Wake-up animation
-        if (dogAnimation != null && wakeClip != null)
+        if (wakeClip)
         {
             dogAnimation.Play("Wake");
             yield return new WaitForSeconds(wakeClip.length);
         }
 
-        // 🏃 Switch to chase
-        if (dogAnimation != null && chaseClip != null)
-            dogAnimation.Play("Chase");
-
-        // Move toward player
-        if (chaseEnabled && player != null)
-            StartCoroutine(ChasePlayer());
+        dogAnimation.Play("Chase");
+        StartCoroutine(ChasePlayer());
     }
 
     IEnumerator ChasePlayer()
     {
-        while (isChasing && player != null)
+        while (isChasing && player)
         {
             transform.position = Vector3.MoveTowards(
                 transform.position,
@@ -86,34 +77,22 @@ public class DogNPC : MonoBehaviour
     {
         isTransitioning = true;
         isChasing = false;
+        dogAnimation.Stop();
 
-        if (dogAnimation != null)
-            dogAnimation.Stop();
+        var move = player.GetComponent<PlayerMovement>();
+        if (move) move.enabled = false;
 
-        // 🧍 Disable player movement
-        if (player != null)
-        {
-            var move = player.GetComponent<PlayerMovement>();
-            if (move != null)
-                move.enabled = false;
-        }
+        if (videoCanvas) videoCanvas.SetActive(true);
 
-        // 🎬 Show video
-        if (videoCanvas != null)
-            videoCanvas.SetActive(true);
-
-        if (videoPlayer != null)
+        if (videoPlayer)
         {
             videoPlayer.Prepare();
-            while (!videoPlayer.isPrepared)
-                yield return null;
+            while (!videoPlayer.isPrepared) yield return null;
 
             videoPlayer.Play();
-            while (videoPlayer.isPlaying)
-                yield return null;
+            while (videoPlayer.isPlaying) yield return null;
         }
 
-        // 🔄 Load next scene
         if (!string.IsNullOrEmpty(nextSceneName))
             SceneManager.LoadScene(nextSceneName);
     }

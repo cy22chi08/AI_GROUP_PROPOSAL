@@ -26,7 +26,7 @@ public class IrrigationQuestManager : MonoBehaviour
         if (!npc.QuestAccepted())
         {
             dialogueUI.SetActive(true);
-            dialogueText.text = "Talk to the old man first!";
+            dialogueText.text = "Alam mo ba gagawin dito? Kausapin mo sa Tatang Boy!";
             return;
         }
 
@@ -36,21 +36,21 @@ public class IrrigationQuestManager : MonoBehaviour
             currentStep++;
 
             dialogueUI.SetActive(true);
-            dialogueText.text = "Switch " + (index + 1) + " activated!";
+            dialogueText.text = "Daluyan number " + (index + 1) + " bukas na!";
 
             if (currentStep >= totalSwitches)
             {
                 blockedPath.gameObject.SetActive(false);
                 irrigationOn.GetComponent<TilemapRenderer>().enabled = true; // ✅ Show tilemap
-                dialogueText.text = "All switches activated! The water flows to the crops.";
-                Debug.Log("Irrigation quest completed.");
+                dialogueText.text = "Lahat ng daluyan ng tubig ay bukas na!";
+                Debug.Log("Tapos ka na dito.");
             }
         }
         else
         {
             currentStep = 0;
             dialogueUI.SetActive(true);
-            dialogueText.text = "Wrong switch! Start again from the first one.";
+            dialogueText.text = "Mali Poy, baka malunod ang mga pananim kapag inuna mo yan!.";
 
             foreach (var s in switches)
             {

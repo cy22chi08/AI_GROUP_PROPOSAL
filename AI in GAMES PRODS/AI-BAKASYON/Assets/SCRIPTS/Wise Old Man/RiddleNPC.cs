@@ -57,7 +57,7 @@ public class RiddleNPC : MonoBehaviour
         }
         else
         {
-            dialogueText.text = "You have solved all my riddles! Well done, traveler.";
+            dialogueText.text = "Magaling Poy! Isa kang matalinong bata!";
             if (blockedPath != null)
             {
                 blockedPath.SetActive(false); // unblock the path
@@ -85,7 +85,7 @@ public class RiddleNPC : MonoBehaviour
             }
             else
             {
-                dialogueText.text = "You answered all riddles. The path ahead is yours!";
+                dialogueText.text = "Sige na pumaroon ka na!";
                 if (blockedPath != null)
                 {
                     blockedPath.SetActive(false); // remove the blocked path here too
@@ -94,7 +94,7 @@ public class RiddleNPC : MonoBehaviour
         }
         else
         {
-            dialogueText.text = "Wrong! Try again.";
+            dialogueText.text = "Mali Poy, Isa pa";
             Invoke(nameof(AskRiddle), 1.5f);
         }
     }
